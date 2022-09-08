@@ -1,6 +1,9 @@
 // import Success from "../ui/Success";
 import { useState } from "react";
-import { useAddVideoMutation } from "../../features/api/apiSlice";
+import {
+    useAddVideoMutation,
+    useEditVideoMutation,
+} from "../../features/api/apiSlice";
 import Success from "../ui/Success";
 import TextArea from "../ui/TextArea";
 import TextInput from "../ui/TextInput";
@@ -16,11 +19,20 @@ const initialState = {
     views: "",
 };
 
-export default function Form() {
+export default function Form({ video }) {
     const [addVideo, { isLoading, isError, isSuccess, error }] =
         useAddVideoMutation();
+    const [
+        editVideo,
+        {
+            isLoading: isLoading2,
+            isError: isError2,
+            isSuccess: isSuccess2,
+            error: error2,
+        },
+    ] = useEditVideoMutation();
 
-    const [state, setState] = useState(initialState);
+    const [state, setState] = useState(video || initialState);
 
     const resetForm = () => {
         setState(initialState);
@@ -38,8 +50,13 @@ export default function Form() {
         resetForm();
     };
 
+    const handleUpdate = (e) => {
+        e.preventDefault();
+        editVideo({ id: video?.id, data: state });
+    };
+
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={video?.id ? handleUpdate : handleSubmit}>
             <div className="shadow overflow-hidden sm:rounded-md">
                 <div className="px-4 py-5 bg-white sm:p-6">
                     <div className="grid grid-cols-6 gap-6">
@@ -118,7 +135,7 @@ export default function Form() {
                 </div>
                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
                     <button
-                        disabled={isLoading}
+                        disabled={isLoading || isLoading2}
                         type="submit"
                         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:ring-indigo-500"
                     >
@@ -129,7 +146,13 @@ export default function Form() {
                 {isSuccess && (
                     <Success message="Video was added successfully" />
                 )}
-                {isError && <Success message={error.message} />}
+                {isSuccess2 && (
+                    <Success message="Video was updated successfully" />
+                )}
+                {isError ||
+                    (isError2 && (
+                        <Success message={error?.message || error2?.message} />
+                    ))}
             </div>
         </form>
     );
